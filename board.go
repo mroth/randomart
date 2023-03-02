@@ -139,3 +139,33 @@ func (b *Board) RenderString(t TileSet) string {
 
 	return sb.String()
 }
+
+func Armor(b string) string {
+	// This could be done much more efficiently with a Scanner, but since we're
+	// working on very small data and it's a proof of concept, optimize for
+	// simplicity and understandability.
+	lines := strings.Split(b, "\n")
+	nDataCols := len(lines[0])
+
+	var sb strings.Builder
+	sb.WriteRune('+')
+	sb.WriteString(strings.Repeat("-", nDataCols))
+	sb.WriteRune('+')
+	sb.WriteRune('\n')
+
+	for _, row := range lines {
+		if len(row) == nDataCols {
+			sb.WriteRune('|')
+			sb.WriteString(row)
+			sb.WriteRune('|')
+			sb.WriteRune('\n')
+		}
+	}
+
+	sb.WriteRune('+')
+	sb.WriteString(strings.Repeat("-", nDataCols))
+	sb.WriteRune('+')
+	sb.WriteRune('\n')
+
+	return sb.String()
+}

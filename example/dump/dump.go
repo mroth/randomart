@@ -12,7 +12,7 @@ func main() {
 
 	b := randomart.NewBoard(17, 9)
 	b.Write(fingerprint)
-	fmt.Println(b.RenderString(randomart.SSHTiles))
+	fmt.Println(randomart.Armor(b.RenderString(randomart.SSHTiles)))
 
 	b = randomart.NewBoard(8, 8)
 	b.Write(fingerprint)
