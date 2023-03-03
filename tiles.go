@@ -1,6 +1,8 @@
 package randomart
 
 type TileSet struct {
+	ID string // unique name
+
 	Runes []rune
 
 	Start rune // special rune for the starting position (optional)
@@ -21,13 +23,20 @@ func (t TileSet) Index(n int) rune {
 }
 
 var (
+	// All TileSets bundled with the package.
+	BundledTileSets = []TileSet{SSHTiles, GalaxyTiles}
+
+	// Classic OpenSSH randomart tileset, using basic ASCII.
 	SSHTiles = TileSet{
+		ID:    "openssh",
 		Runes: []rune{' ', '.', 'o', '+', '=', '*', 'B', 'O', 'X', '@', '%', '&', '#', '/', '^'},
 		Start: 'S',
 		End:   'E',
 	}
 
+	// A spacey emoji based tileset.
 	GalaxyTiles = TileSet{
+		ID:    "galaxy",
 		Runes: []rune{'🌑', '🌒', '🌓', '🌔', '🌕', '🪐', '🌖', '🌗', '🌘'},
 		Start: '🌝',
 		End:   '🌚',
