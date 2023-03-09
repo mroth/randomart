@@ -1,6 +1,7 @@
 package randomart
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"flag"
@@ -108,7 +109,7 @@ func TestBoard_Render(t *testing.T) {
 					path := filepath.Join("testdata", filename)
 
 					board := NewBoard(rc.dimX, rc.dimY)
-					got := board.RenderString(rc.tiles)
+					got := board.Render(rc.tiles)
 					if rc.armor {
 						got = Armor(got)
 					}
@@ -126,7 +127,7 @@ func TestBoard_Render(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					if got != string(want) {
+					if !bytes.Equal(got, want) {
 						t.Errorf("got %v want %v", got, string(want))
 					}
 				})
@@ -167,5 +168,33 @@ func BenchmarkBoard_Write(b *testing.B) {
 	board := NewBoard(17, 9)
 	for i := 0; i < b.N; i++ {
 		board.Write(data)
+	}
+}
+
+func BenchmarkBoard_Render(b *testing.B) {
+	data := []byte{0x9b, 0x4c, 0x7b, 0xce, 0x7a, 0xbd, 0x0a, 0x13, 0x61, 0xfb, 0x17, 0xc2, 0x06, 0x12, 0x0c, 0xed}
+	board := NewBoard(17, 9)
+	board.Write(data)
+
+	for _, ts := range BundledTileSets {
+		b.ReportAllocs()
+		b.Run(ts.ID, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_ = board.Render(ts)
+			}
+		})
+	}
+}
+
+func BenchmarkArmor(b *testing.B) {
+	data := []byte{0x9b, 0x4c, 0x7b, 0xce, 0x7a, 0xbd, 0x0a, 0x13, 0x61, 0xfb, 0x17, 0xc2, 0x06, 0x12, 0x0c, 0xed}
+	board := NewBoard(17, 9)
+	board.Write(data)
+	raw := board.Render(SSHTiles)
+
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = Armor(raw)
 	}
 }

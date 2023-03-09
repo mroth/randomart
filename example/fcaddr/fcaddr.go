@@ -89,7 +89,7 @@ func main() {
 	// display!
 	board := randomart.NewBoard(int(*width), int(*height))
 	board.Write((hsh))
-	fmt.Print(board.RenderString(tileset))
+	fmt.Printf("%s", board.Render(tileset))
 }
 
 func tileMapper() map[string]randomart.TileSet {

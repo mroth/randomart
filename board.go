@@ -1,6 +1,7 @@
 package randomart
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 )
@@ -120,52 +121,52 @@ func (b *Board) moveDown() {
 	}
 }
 
-func (b *Board) RenderString(t TileSet) string {
-	var sb strings.Builder
+func (b *Board) Render(t TileSet) []byte {
+	var buf bytes.Buffer
+	// TODO: manually grow buffer to expected cap
 	for y := range b.data {
 		for x := range b.data[y] {
 			pos := position{x: x, y: y}
 			switch {
 			case pos == b.start && t.Start != 0:
-				sb.WriteRune(t.Start)
+				buf.WriteRune(t.Start)
 			case pos == b.end && t.End != 0:
-				sb.WriteRune(t.End)
+				buf.WriteRune(t.End)
 			default:
-				sb.WriteRune(t.Index(int(b.data[y][x])))
+				buf.WriteRune(t.Index(int(b.data[y][x])))
 			}
 		}
-		sb.WriteRune('\n')
+		buf.WriteRune('\n')
 	}
-
-	return sb.String()
+	return buf.Bytes()
 }
 
-func Armor(b string) string {
+func Armor(b []byte) []byte {
 	// This could be done much more efficiently with a Scanner, but since we're
 	// working on very small data and it's a proof of concept, optimize for
 	// simplicity and understandability.
-	lines := strings.Split(b, "\n")
+	lines := bytes.Split(b, []byte("\n"))
 	nDataCols := len(lines[0])
 
-	var sb strings.Builder
-	sb.WriteRune('+')
-	sb.WriteString(strings.Repeat("-", nDataCols))
-	sb.WriteRune('+')
-	sb.WriteRune('\n')
+	var buf bytes.Buffer
+	buf.WriteRune('+')
+	buf.WriteString(strings.Repeat("-", nDataCols))
+	buf.WriteRune('+')
+	buf.WriteRune('\n')
 
 	for _, row := range lines {
 		if len(row) == nDataCols {
-			sb.WriteRune('|')
-			sb.WriteString(row)
-			sb.WriteRune('|')
-			sb.WriteRune('\n')
+			buf.WriteRune('|')
+			buf.Write(row)
+			buf.WriteRune('|')
+			buf.WriteRune('\n')
 		}
 	}
 
-	sb.WriteRune('+')
-	sb.WriteString(strings.Repeat("-", nDataCols))
-	sb.WriteRune('+')
-	sb.WriteRune('\n')
+	buf.WriteRune('+')
+	buf.WriteString(strings.Repeat("-", nDataCols))
+	buf.WriteRune('+')
+	buf.WriteRune('\n')
 
-	return sb.String()
+	return buf.Bytes()
 }
