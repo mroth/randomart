@@ -1,3 +1,4 @@
+// Example tool to generate a vizhash from a ⨎ Filecoin $FIL f1 address.
 package main
 
 import (

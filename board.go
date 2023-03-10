@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"strings"
+	"unicode/utf8"
 )
 
 type Board struct {
@@ -121,6 +122,7 @@ func (b *Board) moveDown() {
 	}
 }
 
+// Renders output from the current state of Board b using TileSet t.
 func (b *Board) Render(t TileSet) []byte {
 	var buf bytes.Buffer
 	runeLen := utf8.RuneLen(t.Runes[0]) // assume first rune is avg length (not always accurate)
@@ -142,6 +144,7 @@ func (b *Board) Render(t TileSet) []byte {
 	return buf.Bytes()
 }
 
+// Armor wraps the lines of a rendered output b in a simple ASCII box.
 func Armor(b []byte) []byte {
 	// This could be done much more efficiently with a Scanner, but since we're
 	// working on very small data and it's a proof of concept, optimize for
