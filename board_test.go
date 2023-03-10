@@ -109,6 +109,7 @@ func TestBoard_Render(t *testing.T) {
 					path := filepath.Join("testdata", filename)
 
 					board := NewBoard(rc.dimX, rc.dimY)
+					_, _ = board.Write(dc)
 					got := board.Render(rc.tiles)
 					if rc.armor {
 						got = Armor(got)
