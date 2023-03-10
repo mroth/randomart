@@ -123,7 +123,8 @@ func (b *Board) moveDown() {
 
 func (b *Board) Render(t TileSet) []byte {
 	var buf bytes.Buffer
-	// TODO: manually grow buffer to expected cap
+	runeLen := utf8.RuneLen(t.Runes[0]) // assume first rune is avg length (not always accurate)
+	buf.Grow(((b.dimX * runeLen) + 1) * b.dimY)
 	for y := range b.data {
 		for x := range b.data[y] {
 			pos := position{x: x, y: y}
