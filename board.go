@@ -20,7 +20,11 @@ type position struct{ x, y int }
 // the center point.
 //
 // x 0→n, y 0↓n.
-func NewBoard(x, y int) *Board {
+func NewBoard(x, y int) (*Board, error) {
+	if x <= 0 || y <= 0 {
+		return nil, errors.New("invalid dimensions")
+	}
+
 	data := make([]uint8, x*y)
 
 	b := Board{
@@ -30,10 +34,7 @@ func NewBoard(x, y int) *Board {
 	}
 
 	err := b.setStartPos(x/2, y/2)
-	if err != nil {
-		panic(err) // should be unreachable in current usage
-	}
-	return &b
+	return &b, err
 }
 
 func (b *Board) setStartPos(x, y int) error {

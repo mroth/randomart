@@ -88,7 +88,11 @@ func main() {
 	fmt.Printf("decoded: 0x%x (%v bytes) / checksum: 0x%x (%v bytes)\n", hsh, len(hsh), checksum, len(checksum))
 
 	// display!
-	board := randomart.NewBoard(int(*width), int(*height))
+	board, err := randomart.NewBoard(int(*width), int(*height))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	board.Write((hsh))
 	fmt.Printf("%s", board.Render(tileset))
 }
