@@ -161,6 +161,20 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func BenchmarkNewBoard(b *testing.B) {
+	b.ReportAllocs()
+	b.Run("10x10", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_ = NewBoard(10, 10)
+		}
+	})
+	b.Run("17x9", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_ = NewBoard(17, 9)
+		}
+	})
+}
+
 func BenchmarkBoard_Write(b *testing.B) {
 	data := []byte{0x9b, 0x4c, 0x7b, 0xce, 0x7a, 0xbd, 0x0a, 0x13, 0x61, 0xfb, 0x17, 0xc2, 0x06, 0x12, 0x0c, 0xed}
 	b.SetBytes(int64(len(data)))
