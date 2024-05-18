@@ -8,7 +8,7 @@ import (
 )
 
 type Board struct {
-	data       [][]uint8
+	data       []uint8
 	dimX, dimY int
 	start, end position
 	pos        position
@@ -16,15 +16,12 @@ type Board struct {
 
 type position struct{ x, y int }
 
-// NewBoard intializes a Board of dimensions x, y with a starting position of
+// NewBoard initializes a Board of dimensions x, y with a starting position of
 // the center point.
 //
 // x 0→n, y 0↓n.
 func NewBoard(x, y int) *Board {
-	data := make([][]uint8, y)
-	for i := range data {
-		data[i] = make([]uint8, x)
-	}
+	data := make([]uint8, x*y)
 
 	b := Board{
 		data: data,
@@ -48,14 +45,14 @@ func (b *Board) setStartPos(x, y int) error {
 	return nil
 }
 
-// Write writes len(p) bytes to the underlying Board.  The provided fingerprint
+// Write writes len(p) bytes to the underlying Board. The provided fingerprint
 // will be used to explore the board using the drunken bishop algorithm.
 //
 // Implements the io.Writer interface. The returned number of bytes will always
 // equal len(fingerprint), and the error will always be nil
 func (b *Board) Write(fingerprint []byte) (n int, err error) {
 	// leave breadcrumb at start position
-	b.data[b.pos.y][b.pos.x]++
+	b.increment(b.pos.x, b.pos.y)
 
 	for _, fingerByte := range fingerprint { // for each byte of fingerprint
 		for s := uint(0); s < 8; s += 2 { // stride byte in 2 bit chunks
@@ -85,7 +82,7 @@ func (b *Board) Write(fingerprint []byte) (n int, err error) {
 			}
 
 			// mark breadcrumb after move
-			b.data[b.pos.y][b.pos.x]++
+			b.increment(b.pos.x, b.pos.y)
 		}
 
 	}
@@ -122,13 +119,23 @@ func (b *Board) moveDown() {
 	}
 }
 
+// increment the value at the given position
+func (b *Board) increment(x, y int) {
+	b.data[y*b.dimX+x]++
+}
+
+// get the value at the given position
+func (b *Board) getValue(x, y int) uint8 {
+	return b.data[y*b.dimX+x]
+}
+
 // Renders output from the current state of Board b using TileSet t.
 func (b *Board) Render(t TileSet) []byte {
 	var buf bytes.Buffer
 	runeLen := utf8.RuneLen(t.Runes[0]) // assume first rune is avg length (not always accurate)
 	buf.Grow(((b.dimX * runeLen) + 1) * b.dimY)
-	for y := range b.data {
-		for x := range b.data[y] {
+	for y := 0; y < b.dimY; y++ {
+		for x := 0; x < b.dimX; x++ {
 			pos := position{x: x, y: y}
 			switch {
 			case pos == b.start && t.Start != 0:
@@ -136,7 +143,7 @@ func (b *Board) Render(t TileSet) []byte {
 			case pos == b.end && t.End != 0:
 				buf.WriteRune(t.End)
 			default:
-				buf.WriteRune(t.Index(int(b.data[y][x])))
+				buf.WriteRune(t.Index(int(b.getValue(x, y))))
 			}
 		}
 		buf.WriteRune('\n')
