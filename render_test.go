@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -152,11 +153,11 @@ func BenchmarkRenderTo(b *testing.B) {
 
 	for _, bc := range cases {
 		b.Run(bc.name, func(b *testing.B) {
-			b.ReportAllocs()
-			var sink bytes.Buffer
-			for i := 0; i < b.N; i++ {
-				sink.Reset()
-				_, _ = RenderTo(&sink, board, bc.opts)
+			for b.Loop() {
+				_, err := RenderTo(io.Discard, board, bc.opts)
+				if err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	}

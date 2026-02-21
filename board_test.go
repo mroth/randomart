@@ -2,6 +2,7 @@ package randomart
 
 import (
 	"encoding/base64"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -94,30 +95,34 @@ func TestBoard_Write(t *testing.T) {
 }
 
 func BenchmarkNewBoard(b *testing.B) {
-	b.ReportAllocs()
-	b.Run("10x10", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			_, _ = NewBoard(10, 10)
-		}
-	})
-	b.Run("17x9", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			_, _ = NewBoard(17, 9)
-		}
-	})
+	tests := []struct {
+		x, y int
+	}{
+		{10, 10},
+		{17, 9},
+	}
+	for _, tt := range tests {
+		b.Run(fmt.Sprintf("%dx%d", tt.x, tt.y), func(b *testing.B) {
+			for b.Loop() {
+				_, err := NewBoard(tt.x, tt.y)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
 }
 
 func BenchmarkBoard_Write(b *testing.B) {
 	data := []byte{0x9b, 0x4c, 0x7b, 0xce, 0x7a, 0xbd, 0x0a, 0x13, 0x61, 0xfb, 0x17, 0xc2, 0x06, 0x12, 0x0c, 0xed}
 	b.SetBytes(int64(len(data)))
-	b.ReportAllocs()
 
 	board, err := NewBoard(17, 9)
 	if err != nil {
 		b.Fatal(err)
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		board.Write(data)
 	}
 }
