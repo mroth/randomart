@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"strings"
-	"unicode/utf8"
 )
 
 var (
@@ -26,64 +25,52 @@ func RenderTo(w io.Writer, b *Board, opts RenderOptions) (int64, error) {
 		return 0, errNilWriter
 	}
 
+	// default to OpenSSHTiles if no tiles provided
 	tileset := opts.Tiles
 	if len(tileset.Runes) == 0 {
 		tileset = OpenSSHTiles
 	}
 
-	raw := renderBoard(b, tileset)
+	// max buffer size is 4 bytes per cell (worst case with
+	// multi-byte runes and border), pre-allocate to avoid
+	// resizing during render.
+	var buf bytes.Buffer
+	buf.Grow((b.dimX + 2) * (b.dimY + 2) * 4)
+
 	if opts.Border {
-		raw = borderBytes(raw)
+		buf.WriteString(borderLine(b.dimX))
 	}
 
-	n, err := w.Write(raw)
-	return int64(n), err
-}
+	for y := range b.dimY {
+		if opts.Border {
+			buf.WriteByte('|')
+		}
 
-func renderBoard(b *Board, t TileSet) []byte {
-	var buf bytes.Buffer
-	runeLen := utf8.RuneLen(t.Runes[0]) // assume first rune is avg length (not always accurate)
-	buf.Grow(((b.dimX * runeLen) + 1) * b.dimY)
-	for y := 0; y < b.dimY; y++ {
-		for x := 0; x < b.dimX; x++ {
+		for x := range b.dimX {
 			pos := position{x: x, y: y}
 			switch {
-			case pos == b.start && t.Start != 0:
-				buf.WriteRune(t.Start)
-			case pos == b.end && t.End != 0:
-				buf.WriteRune(t.End)
+			case pos == b.start && tileset.Start != 0:
+				buf.WriteRune(tileset.Start)
+			case pos == b.end && tileset.End != 0:
+				buf.WriteRune(tileset.End)
 			default:
-				buf.WriteRune(t.Index(int(b.getValue(x, y))))
+				buf.WriteRune(tileset.Index(int(b.getValue(x, y))))
 			}
 		}
-		buf.WriteRune('\n')
+
+		if opts.Border {
+			buf.WriteByte('|')
+		}
+		buf.WriteByte('\n')
 	}
-	return buf.Bytes()
+
+	if opts.Border {
+		buf.WriteString(borderLine(b.dimX))
+	}
+
+	return io.Copy(w, &buf)
 }
 
-func borderBytes(b []byte) []byte {
-	lines := bytes.Split(b, []byte("\n"))
-	nDataCols := len(lines[0])
-
-	var buf bytes.Buffer
-	buf.WriteRune('+')
-	buf.WriteString(strings.Repeat("-", nDataCols))
-	buf.WriteRune('+')
-	buf.WriteRune('\n')
-
-	for _, row := range lines {
-		if len(row) == nDataCols {
-			buf.WriteRune('|')
-			buf.Write(row)
-			buf.WriteRune('|')
-			buf.WriteRune('\n')
-		}
-	}
-
-	buf.WriteRune('+')
-	buf.WriteString(strings.Repeat("-", nDataCols))
-	buf.WriteRune('+')
-	buf.WriteRune('\n')
-
-	return buf.Bytes()
+func borderLine(width int) string {
+	return "+" + strings.Repeat("-", width) + "+\n"
 }
