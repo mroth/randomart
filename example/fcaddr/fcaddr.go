@@ -34,7 +34,7 @@ var low32 = base32.
 	WithPadding(base32.NoPadding)
 
 func main() {
-	// ability to select from any built-in tileset using string id
+	// ability to select from any built-in tile set using string id
 	mapper := tileMapper()
 
 	// get key names to make list in CLI help
@@ -57,7 +57,7 @@ func main() {
 	}
 	addr := flag.Arg(0)
 
-	// validate tileset id
+	// validate tile set id
 	tileset, ok := mapper[*tileID]
 	if !ok {
 		flag.Usage()
@@ -94,12 +94,16 @@ func main() {
 	}
 
 	board.Write((hsh))
-	fmt.Printf("%s", board.Render(tileset))
+	_, err = randomart.RenderTo(os.Stdout, board, randomart.RenderOptions{Tiles: tileset})
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func tileMapper() map[string]randomart.TileSet {
-	tilemap := make(map[string]randomart.TileSet, len(randomart.BundledTileSets))
-	for _, ts := range randomart.BundledTileSets {
+	tilesets := randomart.TileSets()
+	tilemap := make(map[string]randomart.TileSet, len(tilesets))
+	for _, ts := range tilesets {
 		tilemap[ts.ID] = ts
 	}
 	return tilemap

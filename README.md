@@ -3,7 +3,7 @@
 Visual fingerprint hash (e.g. "randomart") library for Go.
 
 Implements the ["drunken bishop"][1] algorithm from OpenSSH, with added support for
-arbitrary grid size and tilesets.
+arbitrary grid size and tile sets.
 
 [1]: http://www.dirk-loss.de/sshvis/drunken_bishop.pdf
 
@@ -12,7 +12,9 @@ arbitrary grid size and tilesets.
 Examples of rendering the same data with different settings.
 
 ### OpenSSH compatible
-Dimensions: `17x9`, Tileset: `randomart.SSHTiles`, Armor: `true`
+```go
+randomart.RenderOptions{Tiles: randomart.OpenSSHTiles, Border: true}
+```
 ```
 +-----------------+
 |    .+.          |
@@ -28,7 +30,9 @@ Dimensions: `17x9`, Tileset: `randomart.SSHTiles`, Armor: `true`
 ```
 
 ### Spacey emoji
-Dimensions: `10x10`, Tileset: `randomart.Galaxy`, Armor: `false`
+```go
+randomart.RenderOptions{Tiles: randomart.GalaxyTiles}
+```
 ```
 🌒🌔🌑🌑🌑🌑🌑🌑🌑🌑
 🌑🌑🌔🌑🌑🌑🌑🌑🌑🌑
@@ -45,3 +49,20 @@ Dimensions: `10x10`, Tileset: `randomart.Galaxy`, Armor: `false`
 ## Examples
 
 * [fcaddr](./example/fcaddr/): Fingerprint Filecoin f1 addresses
+
+## Rendering API
+
+Render to any `io.Writer`:
+
+```go
+board, _ := randomart.NewBoard(17, 9)
+_, _ = board.Write(fingerprint)
+
+// defaults to randomart.OpenSSHTiles when Tiles is empty
+_, _ = randomart.RenderTo(os.Stdout, board, randomart.RenderOptions{})
+
+// choose tiles + border
+_, _ = randomart.RenderTo(os.Stdout, board,
+		randomart.RenderOptions{Tiles: randomart.GalaxyTiles, Border: true},
+)
+```

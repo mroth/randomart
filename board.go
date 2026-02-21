@@ -1,12 +1,10 @@
 package randomart
 
 import (
-	"bytes"
 	"errors"
-	"strings"
-	"unicode/utf8"
 )
 
+// Board represents the state of the randomart grid as it is being explored.
 type Board struct {
 	data       []uint8
 	dimX, dimY int
@@ -128,57 +126,4 @@ func (b *Board) increment(x, y int) {
 // get the value at the given position
 func (b *Board) getValue(x, y int) uint8 {
 	return b.data[y*b.dimX+x]
-}
-
-// Renders output from the current state of Board b using TileSet t.
-func (b *Board) Render(t TileSet) []byte {
-	var buf bytes.Buffer
-	runeLen := utf8.RuneLen(t.Runes[0]) // assume first rune is avg length (not always accurate)
-	buf.Grow(((b.dimX * runeLen) + 1) * b.dimY)
-	for y := 0; y < b.dimY; y++ {
-		for x := 0; x < b.dimX; x++ {
-			pos := position{x: x, y: y}
-			switch {
-			case pos == b.start && t.Start != 0:
-				buf.WriteRune(t.Start)
-			case pos == b.end && t.End != 0:
-				buf.WriteRune(t.End)
-			default:
-				buf.WriteRune(t.Index(int(b.getValue(x, y))))
-			}
-		}
-		buf.WriteRune('\n')
-	}
-	return buf.Bytes()
-}
-
-// Armor wraps the lines of a rendered output b in a simple ASCII box.
-func Armor(b []byte) []byte {
-	// This could be done much more efficiently with a Scanner, but since we're
-	// working on very small data and it's a proof of concept, optimize for
-	// simplicity and understandability.
-	lines := bytes.Split(b, []byte("\n"))
-	nDataCols := len(lines[0])
-
-	var buf bytes.Buffer
-	buf.WriteRune('+')
-	buf.WriteString(strings.Repeat("-", nDataCols))
-	buf.WriteRune('+')
-	buf.WriteRune('\n')
-
-	for _, row := range lines {
-		if len(row) == nDataCols {
-			buf.WriteRune('|')
-			buf.Write(row)
-			buf.WriteRune('|')
-			buf.WriteRune('\n')
-		}
-	}
-
-	buf.WriteRune('+')
-	buf.WriteString(strings.Repeat("-", nDataCols))
-	buf.WriteRune('+')
-	buf.WriteRune('\n')
-
-	return buf.Bytes()
 }
