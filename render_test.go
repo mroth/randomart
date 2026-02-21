@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -45,12 +44,67 @@ func TestRenderTo_Golden(t *testing.T) {
 	}
 
 	rendercases := []struct {
+		name       string
 		tiles      TileSet
 		dimX, dimY int
-		border     bool
+		opts       RenderOptions
 	}{
-		{tiles: OpenSSHTiles, dimX: 17, dimY: 9, border: true},
-		{tiles: GalaxyTiles, dimX: 10, dimY: 10, border: false},
+		{
+			name:  "openssh-17x9-border",
+			tiles: OpenSSHTiles,
+			dimX:  17,
+			dimY:  9,
+			opts:  RenderOptions{Border: true},
+		},
+		{
+			name:  "openssh-17x9-border-header-footer",
+			tiles: OpenSSHTiles,
+			dimX:  17,
+			dimY:  9,
+			opts: RenderOptions{
+				Border: true,
+				Header: "ED25519 256",
+				Footer: "SHA256",
+			},
+		},
+		{
+			name:  "openssh-17x9-border-header-trunc",
+			tiles: OpenSSHTiles,
+			dimX:  17,
+			dimY:  9,
+			opts: RenderOptions{
+				Border: true,
+				Header: "THIS HEADER IS INTENTIONALLY TOO LONG",
+			},
+		},
+		{
+			name:  "galaxy-10x10",
+			tiles: GalaxyTiles,
+			dimX:  10,
+			dimY:  10,
+			opts:  RenderOptions{},
+		},
+		{
+			name:  "galaxy-10x10-header-footer",
+			tiles: GalaxyTiles,
+			dimX:  10,
+			dimY:  10,
+			opts: RenderOptions{
+				Header: "GALAXY",
+				Footer: "END",
+			},
+		},
+		{
+			name:  "galaxy-10x10-border-header-footer-trunc",
+			tiles: GalaxyTiles,
+			dimX:  10,
+			dimY:  10,
+			opts: RenderOptions{
+				Border: true,
+				Header: "GALAXY HEADER TOO LONG",
+				Footer: "GALAXY FOOTER TOO LONG",
+			},
+		},
 	}
 
 	for _, dc := range datacases {
@@ -61,16 +115,7 @@ func TestRenderTo_Golden(t *testing.T) {
 		t.Run(slug, func(t *testing.T) {
 
 			for _, rc := range rendercases {
-				specifier := fmt.Sprintf("%s-%dx%d%s",
-					rc.tiles.ID,
-					rc.dimX, rc.dimY,
-					func() string {
-						if rc.border {
-							return "-border"
-						}
-						return ""
-					}(),
-				)
+				specifier := rc.name
 				t.Run(specifier, func(t *testing.T) {
 					filename := strings.Join([]string{slug, specifier, "txt"}, ".")
 					path := filepath.Join("testdata", filename)
@@ -86,7 +131,8 @@ func TestRenderTo_Golden(t *testing.T) {
 					}
 
 					var out bytes.Buffer
-					renderOpts := RenderOptions{Tiles: rc.tiles, Border: rc.border}
+					renderOpts := rc.opts
+					renderOpts.Tiles = rc.tiles
 					_, err = RenderTo(&out, board, renderOpts)
 					if err != nil {
 						t.Fatal(err)
@@ -130,6 +176,29 @@ func TestRenderTo_Errors(t *testing.T) {
 			t.Fatalf("RenderTo() bytes = %v, want 0", n)
 		}
 	})
+}
+
+func Test_borderLineWithLabel(t *testing.T) {
+	tests := []struct {
+		name  string
+		width int
+		label string
+		want  string
+	}{
+		{name: "empty label falls back to plain border", width: 17, label: "", want: "+-----------------+\n"},
+		{name: "short centered label", width: 17, label: "SHA256", want: "+----[SHA256]-----+\n"},
+		{name: "minimal width label", width: 3, label: "A", want: "+[A]+\n"},
+		{name: "truncate single rune uses ellipsis", width: 3, label: "HELLO", want: "+[…]+\n"},
+		{name: "truncate multi rune uses ellipsis suffix", width: 10, label: "123456789", want: "+[1234567…]+\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := borderLineWithLabel(tt.width, tt.label); got != tt.want {
+				t.Fatalf("borderLineWithLabel(%d, %q) = %q, want %q", tt.width, tt.label, got, tt.want)
+			}
+		})
+	}
 }
 
 func BenchmarkRenderTo(b *testing.B) {

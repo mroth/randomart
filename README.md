@@ -13,10 +13,15 @@ Examples of rendering the same data with different settings.
 
 ### OpenSSH compatible
 ```go
-randomart.RenderOptions{Tiles: randomart.OpenSSHTiles, Border: true}
+randomart.RenderOptions{
+	Tiles:  randomart.OpenSSHTiles,
+	Border: true,
+	Header: "ED25519 256",
+	Footer: "SHA256",
+}
 ```
 ```
-+-----------------+
++--[ED25519 256]--+
 |    .+.          |
 |      o.         |
 |     .. +        |
@@ -26,7 +31,7 @@ randomart.RenderOptions{Tiles: randomart.OpenSSHTiles, Border: true}
 |        B o..    |
 |         *...    |
 |        .o+...   |
-+-----------------+
++----[SHA256]-----+
 ```
 
 ### Spacey emoji
@@ -45,24 +50,7 @@ randomart.RenderOptions{Tiles: randomart.GalaxyTiles}
 🌑🌑🌑🌑🌑🌓🌔🌓🌑🌒
 🌑🌑🌑🌑🌑🌒🌔🌔🌒🌒
 ```
-
-## Examples
-
-* [fcaddr](./example/fcaddr/): Fingerprint Filecoin f1 addresses
-
-## Rendering API
-
-Render to any `io.Writer`:
-
-```go
-board, _ := randomart.NewBoard(17, 9)
-_, _ = board.Write(fingerprint)
-
-// defaults to randomart.OpenSSHTiles when Tiles is empty
-_, _ = randomart.RenderTo(os.Stdout, board, randomart.RenderOptions{})
-
-// choose tiles + border
-_, _ = randomart.RenderTo(os.Stdout, board,
-		randomart.RenderOptions{Tiles: randomart.GalaxyTiles, Border: true},
-)
-```
+ 
+ ## Examples
+ 
+ * [fcaddr](./example/fcaddr/): Fingerprint Filecoin f1 addresses
